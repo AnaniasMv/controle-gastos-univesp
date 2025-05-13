@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useTransactions } from '../contexts/TransactionsContext';
-import { Picker } from '@react-native-picker/picker'; // Importação correta do Picker
+import { Picker } from '@react-native-picker/picker';
 
 export default function TransacaoScreen({ navigation }) {
-  const { addTransaction } = useTransactions();
+  const { salvarTransacao } = useTransactions(); // usamos salvarTransacao agora
   
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
@@ -14,14 +14,18 @@ export default function TransacaoScreen({ navigation }) {
 
   const handleAddTransaction = () => {
     if (descricao && valor && tipo && categoria) {
-      addTransaction({ descricao, valor, tipo, categoria });
+      salvarTransacao({
+        descricao,
+        valor: parseFloat(valor),
+        tipo,
+        categoria,
+      });
       navigation.goBack();
     } else {
       alert('Preencha todos os campos!');
     }
   };
 
-  // Definindo as categorias de forma condicional
   const categoriasDisponiveis = tipo === 'receita'
     ? [
         { label: 'Pagamento Mensal', value: 'Pagamento Mensal' },
@@ -32,7 +36,6 @@ export default function TransacaoScreen({ navigation }) {
         { label: 'Transporte', value: 'Transporte' },
         { label: 'Lazer', value: 'Lazer' },
         { label: 'Saúde', value: 'Saúde' },
-        // Adicione mais categorias de despesa aqui
       ];
 
   return (
@@ -62,12 +65,7 @@ export default function TransacaoScreen({ navigation }) {
         style={styles.input}
         onValueChange={(itemValue) => {
           setTipo(itemValue);
-          // Atualiza a categoria automaticamente quando mudar o tipo
-          if (itemValue === 'receita') {
-            setCategoria('Pagamento Mensal');
-          } else {
-            setCategoria('Alimentação');
-          }
+          setCategoria(itemValue === 'receita' ? 'Pagamento Mensal' : 'Alimentação');
         }}
       >
         <Picker.Item label="Receita" value="receita" />
