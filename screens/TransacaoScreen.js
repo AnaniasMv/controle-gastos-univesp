@@ -1,8 +1,9 @@
-// TransacaoScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { supabase } from '../supabase';
+import { View, Text, TextInput, Button, StyleSheet, Platform } from 'react-native';
 import { useTransactions } from '../contexts/TransactionsContext';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TransacaoScreen({ navigation }) {
   const { salvarTransacao } = useTransactions(); // usamos salvarTransacao agora
@@ -11,13 +12,16 @@ export default function TransacaoScreen({ navigation }) {
   const [valor, setValor] = useState('');
   const [tipo, setTipo] = useState('receita');
   const [categoria, setCategoria] = useState('Pagamento Mensal');
+  const [data, setData] = useState(new Date()); // Inicializa com a data atual
+  const [showDatePicker, setShowDatePicker] = useState(false); // Controla a visibilidade do DateTimePicker
 
   const handleAddTransaction = () => {
-    if (descricao && valor && tipo && categoria) {
+    if (descricao && valor && tipo && categoria && data) {
       salvarTransacao({
         descricao,
         valor: parseFloat(valor),
         tipo,
+        data: data.toISOString(), // Envia a data no formato ISO
         categoria,
       });
       navigation.goBack();
@@ -37,6 +41,18 @@ export default function TransacaoScreen({ navigation }) {
         { label: 'Lazer', value: 'Lazer' },
         { label: 'Saúde', value: 'Saúde' },
       ];
+
+  // Função para manipular a mudança de data
+  const onChangeDate = (event, selectedDate) => {
+    const currentDate = selectedDate || data;
+    setShowDatePicker(false); // Fecha o DateTimePicker após selecionar a data
+    setData(currentDate); // Atualiza o estado com a data escolhida
+  };
+
+  // Função para abrir o DateTimePicker
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -83,6 +99,17 @@ export default function TransacaoScreen({ navigation }) {
         ))}
       </Picker>
 
+      <Button title="Escolher Data" color='black' onPress={showDatePickerModal} />
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={data}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+        />
+      )}
+
       <Button title="Adicionar Transação" onPress={handleAddTransaction} />
     </View>
   );
@@ -107,4 +134,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 5,
   },
+
 });

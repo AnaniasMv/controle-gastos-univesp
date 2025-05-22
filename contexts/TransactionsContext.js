@@ -15,15 +15,20 @@ export function TransactionsProvider({ children }) {
 
   // Salva nova transação no Supabase e atualiza o estado
   async function salvarTransacao(novaTransacao) {
+    console.log('Tentando salvar transação:', novaTransacao)
+
     const { data, error } = await supabase
       .from('transacoes')
       .insert([novaTransacao]) // Supabase espera um array
 
-    if (error) {
-      console.error('Erro ao salvar transação:', error)
-      return
+    if (error || !data || data.length === 0) {
+      console.error('Erro ao salvar transação:', error.message);
+      return;
     }
 
+
+
+    console.log('Transação salva com sucesso:', data[0])
     // Adiciona ao estado local
     setTransactions((prev) => [...prev, data[0]])
   }
@@ -33,7 +38,7 @@ export function TransactionsProvider({ children }) {
     async function fetchData() {
       const dados = await listarTransacoes()
       console.log('Transações do Supabase:', dados)
-      setTransactions(dados) // já salva no estado local
+      setTransactions(dados)
     }
 
     fetchData()
@@ -49,7 +54,7 @@ export function TransactionsProvider({ children }) {
 // Função para buscar transações no Supabase
 async function listarTransacoes() {
   const { data, error } = await supabase
-    .from('transacoes') // nome da tabela no Supabase
+    .from('transacoes')
     .select('*')
 
   if (error) {
@@ -57,10 +62,10 @@ async function listarTransacoes() {
     return []
   }
 
-  return data
+  return data || [] // <-- garante que nunca retorna null
 }
 
-// Hook customizado para usar o contexto de forma mais fácil
+// Hook customizado para usar o contexto
 export function useTransactions() {
   const context = useContext(TransactionsContext)
   if (!context) {
